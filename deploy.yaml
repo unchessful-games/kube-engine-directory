@@ -1,0 +1,122 @@
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: unchessful
+  name: engine-reader
+rules:
+- apiGroups: ["unchessful.games"]
+  resources: ["engines"]
+  verbs: ["get", "watch", "list"]
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: engine-reader-account
+  namespace: unchessful
+automountServiceAccountToken: false
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: engine-read-permission
+  namespace: unchessful
+subjects:
+- kind: ServiceAccount
+  name: engine-reader-account
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: engine-reader
+  apiGroup: rbac.authorization.k8s.io
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: unchessful
+  name: engine-directory
+  labels:
+    app: engine-directory
+
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: engine-directory
+  template:
+    metadata:
+      labels:
+        app: engine-directory
+    spec:
+      serviceAccountName: engine-reader-account
+      topologySpreadConstraints:
+      - whenUnsatisfiable: DoNotSchedule
+        topologyKey: kubernetes.io/hostname
+        labelSelector:
+          matchLabels:
+            app: engine-directory
+        maxSkew: 1
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: NotIn
+                values:
+                - nothing
+      # nodeSelector:
+      #   kubernetes.io/arch: amd64
+      containers:
+        - name: engine
+          image: registry.danya02.ru/unchessful/engine-directory:latest
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: 32M
+              cpu: 100m
+            limits:
+              memory: 128M
+              cpu: 500m
+          ports:
+            - name: web
+              containerPort: 3000
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: unchessful
+  name: engine-directory-svc
+
+spec:
+  ports:
+    - name: web
+      port: 80
+      targetPort: web
+
+  selector:
+    app: engine-directory
+
+---
+# Traefik-specific ingress, can configure custom Traefik props
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: engine-directory-ingressroute
+  namespace: unchessful
+spec:
+  tls:
+    domains:
+      - main: api.unchessful.games
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`engines.unchessful.games`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+      - name: engine-directory-svc
+        port: web

@@ -1,0 +1,7 @@
+apiVersion: unchessful.games/v1
+kind: Engine
+metadata:
+  name: random
+  namespace: unchessful
+spec:
+  url: https://engines.unchessful.games/basic-strategies
