@@ -31,7 +31,7 @@ async fn main() -> anyhow::Result<Infallible> {
 
     while let Some(v) = rf.next().await {
         let v = v?;
-        println!("{v:?}");
+        //println!("{v:?}");
         match v {
             kube::runtime::watcher::Event::Applied(v) => tx
                 .send(EngineTrackerTask::CreateUrl(v.spec.url))

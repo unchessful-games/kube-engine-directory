@@ -26,7 +26,6 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: engine-reader-account
-  apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
   name: engine-reader
@@ -52,6 +51,7 @@ spec:
         app: engine-directory
     spec:
       serviceAccountName: engine-reader-account
+      automountServiceAccountToken: true
       topologySpreadConstraints:
       - whenUnsatisfiable: DoNotSchedule
         topologyKey: kubernetes.io/hostname
@@ -72,7 +72,7 @@ spec:
       #   kubernetes.io/arch: amd64
       containers:
         - name: engine
-          image: registry.danya02.ru/unchessful/engine-directory:latest
+          image: registry.danya02.ru/unchessful/engine-directory:v1
           imagePullPolicy: Always
           resources:
             requests:

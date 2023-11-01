@@ -17,3 +17,5 @@ Cargo.lock
 # Added by cargo
 
 /target
+/target-x86_64
+/target-aarch64

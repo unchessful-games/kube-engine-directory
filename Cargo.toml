@@ -17,7 +17,7 @@ serde_json = "1.0.108"
 tracing-subscriber = "0.3.17"
 anyhow = "1.0.75"
 futures-util = "0.3.29"
-reqwest = { version = "0.11.22", features = ["rustls", "webpki-roots", "json"], default-features = false }
+reqwest = { version = "0.11.22", features = ["rustls", "webpki-roots", "json", "rustls-tls"], default-features = false }
 tracing = "0.1.40"
 engine-trait = {git = "https://github.com/unchessful-games/engine-trait"}
 rand = "0.8.5"

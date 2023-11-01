@@ -22,11 +22,11 @@ pub async fn engine_tracker(
     // Spawn a task to send us a Reconcile message once every minute.
     async fn reconciliation_loop(task_sender: mpsc::Sender<EngineTrackerTask>) -> ! {
         loop {
-            tokio::time::sleep(Duration::from_secs(60)).await;
             task_sender
                 .send(EngineTrackerTask::Reconcile)
                 .await
                 .unwrap();
+            tokio::time::sleep(Duration::from_secs(60)).await;
         }
     }
     tokio::spawn(reconciliation_loop(task_sender.clone()));
